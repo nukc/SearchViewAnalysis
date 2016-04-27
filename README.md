@@ -221,6 +221,7 @@ W/SearchView: Search suggestions cursor at row 0 returned exception.
                   at android.support.v7.widget.SearchView.onItemClicked(SearchView.java:1349)
                   at android.support.v7.widget.SearchView.access$1800(SearchView.java:103)
                   at android.support.v7.widget.SearchView$10.onItemClick(SearchView.java:1373)
+                  ......
 ```
 
 定位到第1620行：
