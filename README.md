@@ -8,12 +8,12 @@ SearchView是一个搜索框控件，样式也挺好看的。这次解析主要�
 - <a href="#use">使用方法</a>
 - <a href="#analysis">源码解析</a>
 	- <a href="#extends">1. 继承关系</a>
-	- <a href="#widgets">2.主要控件</a>
-	- <a href="#construct">3.构造方法和自定义</a>
-	- <a href="#listener">4.Listener</a>
-	- <a href="#collapsibleactionview">5.CollapsibleActionView接口</a>
-	- <a href="#instancestate">6.状态的保存和恢复</a>
-	- <a href="#suggestions">7.关于Suggestions和Searchable</a>
+	- <a href="#widgets">2. 主要控件</a>
+	- <a href="#construct">3. 构造方法和自定义</a>
+	- <a href="#listener">4. Listener</a>
+	- <a href="#collapsibleactionview">5. CollapsibleActionView接口</a>
+	- <a href="#instancestate">6. 状态的保存和恢复</a>
+	- <a href="#suggestions">7. 关于Suggestions和Searchable</a>
 	- <a href="#voice">8. 语音搜索功能</a>
 
 ## <div id="use">使用方法</div>
@@ -107,7 +107,7 @@ v7版本：23.2.1
 	</tbody>
 </table>
 
-#### <div id="widgets">2.主要控件</div>
+#### <div id="widgets">2. 主要控件</div>
 
 首先，我们来看看`SearchView`里面有什么控件：
 ```java
@@ -127,7 +127,7 @@ v7版本：23.2.1
 
 看命名也能大概知道控件各自充当了什么角色了。
 
-#### <div id="construct">3.构造方法和自定义</div>
+#### <div id="construct">3. 构造方法和自定义</div>
 
 接下来看构造方法`public SearchView(Context context, AttributeSet attrs, int defStyleAttr)`,`v7`的`SearchView`并不是用`TypedArray`而是使用`TintTypedArray`，看了源码发现`TintTypedArray`里有个：``` private final TypedArray mWrapped; ```所以主要还是`TypedArray`，不同点是`getDrawable(int index)`和新加的`getDrawableIfKnown(int index)`方法，
 并在满足条件下会调用`AppCompatDrawableManager.get().getDrawable(mContext, resourceId)`。
@@ -163,7 +163,7 @@ updateQueryHint();
 
 ```
 
-#### <div id="listener">4.Listener</div>
+#### <div id="listener">4. Listener</div>
 
 然后，我们来看看`SearchView`里面有几个Listener：
 
@@ -242,19 +242,19 @@ updateQueryHint();
 
 其他Listener差不多也是这样，那接下来看看其他的。
 
-#### <div id="collapsibleactionview">5.CollapsibleActionView接口</div>
+#### <div id="collapsibleactionview">5. CollapsibleActionView接口</div>
 
 SearchView实现了CollapsibleActionView接口：onActionViewExpanded()和onActionViewCollapsed(),具体操作就是
 设置键盘及控件，并使用全局变量`mExpandedInActionView`记录ActionView是否伸展。只有当SearchView作为MenuItem的时候
 才会触发，如果是使用v7包的话，想要通过menu获取SearchView就需要使用MenuItemCompat类：`MenuItemCompat.getActionView(MenuItem)`,
 具体可以看demo。
 
-#### <div id="instancestate">6.状态的保存和恢复</div>
+#### <div id="instancestate">6. 状态的保存和恢复</div>
 
 SearchView覆写了onSaveInstanceState()和onRestoreInstanceState(Parcelable state)用来保存和恢复状态，为什么要覆写呢？
 因为需要额外保存`boolean mIconified`，为此还建了个内部静态类SavedState用来保存mIconified，（SavedState extends BaseSavedState）一个实现了Parcelable序列化的类。
 
-#### <div id="suggestions">7.关于Suggestions和Searchable</div>
+#### <div id="suggestions">7. 关于Suggestions和Searchable</div>
 
 如果你使用了Suggestions，而且没有setSearchableInfo，那么当你点击建议可选项的时候会log：
 
