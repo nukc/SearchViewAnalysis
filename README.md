@@ -234,7 +234,7 @@ W/SearchView: Search suggestions cursor at row 0 returned exception.
 
             //在这里并没有检查mSearchable是否为null
             if (action == null && Build.VERSION.SDK_INT >= 8) {
-                action = mSearchable.getSuggestIntentAction();
+                action = mSearchable.getSuggestIntentAction();  //第1620行
             }
 
             /*
