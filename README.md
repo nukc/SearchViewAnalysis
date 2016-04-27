@@ -5,71 +5,15 @@ SearchView是一个搜索框控件，样式也挺好看的。这次解析主要�
 
 ## 目录
 
-- <a href="#use">使用方法</a>
 - <a href="#analysis">源码解析</a>
 	- <a href="#extends">1. 继承关系</a>
-	- <a href="#widgets">2. 主要控件</a>
+	- <a href="#widgets">2. 主要组件</a>
 	- <a href="#construct">3. 构造方法和自定义</a>
 	- <a href="#listener">4. Listener</a>
 	- <a href="#collapsibleactionview">5. CollapsibleActionView接口</a>
 	- <a href="#instancestate">6. 状态的保存和恢复</a>
 	- <a href="#suggestions">7. 关于Suggestions和Searchable</a>
 	- <a href="#voice">8. 语音搜索功能</a>
-
-## <div id="use">使用方法</div>
-
-在xml中：
-```xml
-    <android.support.v7.widget.SearchView
-        android:id="@+id/search_view"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:imeOptions="actionSearch"
-        app:queryHint="@string/hint" />
-
-```
-
-在java中:
-```java
-
-    //如果设置false,SearchView会一直处于展开状态并且输入框内的搜索图标会没有
-    mSearchView.setIconifiedByDefault(true);  
-    mSearchView.setIconified(false);  //设置为false，SearchView会展开，反之会缩成1个Icon
-    //.....
-    
-```
-
-通过查看源码，然而并没有发现改变提示文字颜色这类比较细节的方法，如果想要修改，可以通过下面这几种方法：
-
-```java
-
-    try {
-        Field field = mSearchView.getClass().getDeclaredField("mSearchSrcTextView");
-        field.setAccessible(true);
-
-        //通过反射拿到SearchView里面的SearchAutoComplete组件
-        mSearchSrcTextView = (SearchView.SearchAutoComplete) field.get(mSearchView);
-        //设置提示文字的颜色
-        mSearchSrcTextView.setHintTextColor(Color.BLUE);
-    } catch (NoSuchFieldException e) {
-        e.printStackTrace();
-    } catch (IllegalAccessException e) {
-        e.printStackTrace();
-    }
-    
-```
-
-或者
-
-```java
-
-    mSearchSrcTextView = (SearchView.SearchAutoComplete)
-        mSearchView.findViewById(android.support.v7.appcompat.R.id.search_src_text);
-    mSearchSrcTextView.setHintTextColor(Color.RED);
-
-```
-
-SearchView的其他使用方法就不再介绍了，看了源码解析应该也就懂了。
 
 ## <div id="analysis">源码解析</div>
 
@@ -107,9 +51,8 @@ v7版本：23.2.1
 	</tbody>
 </table>
 
-#### <div id="widgets">2. 主要控件</div>
+#### <div id="widgets">2. 主要组件</div>
 
-首先，我们来看看`SearchView`里面有什么控件：
 ```java
 
     private final SearchAutoComplete mSearchSrcTextView;
@@ -124,7 +67,6 @@ v7版本：23.2.1
     private final ImageView mCollapsedIcon;
 
 ```
-
 看命名也能大概知道控件各自充当了什么角色了。
 
 #### <div id="construct">3. 构造方法和自定义</div>
@@ -246,13 +188,26 @@ updateQueryHint();
 
 SearchView实现了CollapsibleActionView接口：onActionViewExpanded()和onActionViewCollapsed(),具体操作就是
 设置键盘及控件，并使用全局变量`mExpandedInActionView`记录ActionView是否伸展。只有当SearchView作为MenuItem的时候
-才会触发，如果是使用v7包的话，想要通过menu获取SearchView就需要使用MenuItemCompat类：`MenuItemCompat.getActionView(MenuItem)`,
-具体可以看demo。
+才会触发，如果是使用v7包的话，想要通过menu获取SearchView就需要使用MenuItemCompat类：
+`MenuItemCompat.getActionView(android.view.MenuItem item)`,具体可以看demo。
 
 #### <div id="instancestate">6. 状态的保存和恢复</div>
 
 SearchView覆写了onSaveInstanceState()和onRestoreInstanceState(Parcelable state)用来保存和恢复状态，为什么要覆写呢？
-因为需要额外保存`boolean mIconified`，为此还建了个内部静态类SavedState用来保存mIconified，（SavedState extends BaseSavedState）一个实现了Parcelable序列化的类。
+因为需要额外保存`boolean mIconified`，为此还建了个内部静态类SavedState用来保存mIconified。
+
+```java
+
+    //实现了Parcelable序列化
+    static class SavedState extends BaseSavedState {
+        boolean isIconified;
+
+        /*
+          省略其他代码
+        */
+    }
+
+```
 
 #### <div id="suggestions">7. 关于Suggestions和Searchable</div>
 
@@ -268,8 +223,56 @@ W/SearchView: Search suggestions cursor at row 0 returned exception.
                   at android.support.v7.widget.SearchView$10.onItemClick(SearchView.java:1373)
 ```
 
-定位到第1620行发现调用mSearchable的方法之前并没有检查mSearchable是否为null，其他地方是有判断的，由于做了catch所以不会crash，
-也不影响使用，另外，如果setOnSuggestionListener，onSuggestionClick(int position) 返回 true 就不会执行`createIntentFromSuggestion(~)`，
+定位到第1620行：
+
+```java
+    private Intent createIntentFromSuggestion(Cursor c, int actionKey, String actionMsg) {
+        try {
+
+            // use specific action if supplied, or default action if supplied, or fixed default
+            String action = getColumnString(c, SearchManager.SUGGEST_COLUMN_INTENT_ACTION);
+
+            //在这里并没有检查mSearchable是否为null
+            if (action == null && Build.VERSION.SDK_INT >= 8) {
+                action = mSearchable.getSuggestIntentAction();
+            }
+
+            /*
+              省略部分代码
+            */
+
+            return createIntent(action, dataUri, extraData, query, actionKey, actionMsg);
+        } catch (RuntimeException e ) {
+
+            /*
+              省略部分代码
+            */
+
+            Log.w(LOG_TAG, "Search suggestions cursor at row " + rowNum +
+                                    " returned exception.", e);
+            return null;
+        }
+    }
+```
+
+发现调用mSearchable的方法之前并没有检查mSearchable是否为null，其他地方是有判断的，由于做了catch所以不会crash，
+也不影响使用，另外，如果setOnSuggestionListener：
+
+```java
+    mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+        @Override
+        public boolean onQueryTextSubmit(String query) {
+            return false;
+        }
+
+        @Override
+        public boolean onQueryTextChange(String newText) {
+            return true; //返回true
+        }
+    });
+```
+
+onSuggestionClick(int position) 返回 true 就不会执行`createIntentFromSuggestion(~)`，
 也就不会log了，但这样，键盘的隐藏和可选项pop的dismiss也不会执行，需要自己处理，使用SearchView的`clearFocus()`方法就能达到同样的效果。
 
 那既然是报null，那就设置Searchable吧，设置后是会startActivity(执行完createIntentFromSuggestion(~)后就会执行)。
