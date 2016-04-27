@@ -3,7 +3,11 @@
 SearchView是一个搜索框控件，样式也挺好看的。这次解析主要围绕`android.support.v7.widget`包下的SearchView（API >= 7）,`android.widget.SearchView`支持API >= 11，
 另外有个`android.support.v4.widget.SearchViewCompat`。
 
-## 使用方法
+## 目录
+
+<a href="#use">使用方法</a>
+
+## <div id="use">使用方法</div>
 
 在xml中：
 ```xml
