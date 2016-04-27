@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">SearchViewAnalysis</string>
+
+    <string name="hint">提示文字</string>
+</resources>
