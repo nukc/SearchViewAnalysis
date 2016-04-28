@@ -14,6 +14,7 @@ SearchView是一个搜索框控件，样式也挺好看的。这次解析主要�
 	- <a href="#instancestate">6. 状态的保存和恢复</a>
 	- <a href="#suggestions">7. 关于Suggestions和Searchable</a>
 	- <a href="#voice">8. 语音搜索功能</a>
+	- <a href="#reflector">9. AutoCompleteTextViewReflector</a>
 
 ## <div id="analysis">源码解析</div>
 
@@ -153,7 +154,16 @@ updateQueryHint();
     //同在构造方法里添加了监听
     mSearchSrcTextView.setOnEditorActionListener(mOnEditorActionListener);
 
-    //mOnEditorActionListener - > onSubmitQuery()
+    private final OnEditorActionListener mOnEditorActionListener = new OnEditorActionListener() {
+    
+        /**
+         * Called when the input method default action key is pressed.
+         */
+        public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+            onSubmitQuery();
+            return true;
+        }
+    };
 
     private void onSubmitQuery() {
         CharSequence query = mSearchSrcTextView.getText();
@@ -188,8 +198,10 @@ updateQueryHint();
 
 SearchView实现了CollapsibleActionView接口：onActionViewExpanded()和onActionViewCollapsed(),具体操作就是
 设置键盘及控件，并使用全局变量`mExpandedInActionView`记录ActionView是否伸展。只有当SearchView作为MenuItem的时候
-才会触发，如果是使用v7包的话，想要通过menu获取SearchView就需要使用MenuItemCompat类：
-`MenuItemCompat.getActionView(android.view.MenuItem item)`,具体可以看demo。
+才会触发，如果是使用v7包的话，想要通过menu获取SearchView就需要使用MenuItemCompat类，具体可以看demo。
+```java
+    MenuItemCompat.getActionView(android.view.MenuItem item);
+```
 
 #### <div id="instancestate">6. 状态的保存和恢复</div>
 
@@ -202,9 +214,9 @@ SearchView覆写了onSaveInstanceState()和onRestoreInstanceState(Parcelable sta
     static class SavedState extends BaseSavedState {
         boolean isIconified;
 
-        /*
-          省略其他代码
-        */
+        /**
+         * 省略其他代码
+         */
     }
 
 ```
@@ -238,16 +250,16 @@ W/SearchView: Search suggestions cursor at row 0 returned exception.
                 action = mSearchable.getSuggestIntentAction();  //第1620行
             }
 
-            /*
-              省略部分代码
-            */
+            /**
+             *省略部分代码
+             */
 
             return createIntent(action, dataUri, extraData, query, actionKey, actionMsg);
         } catch (RuntimeException e ) {
 
-            /*
-              省略部分代码
-            */
+            /**
+             *省略部分代码
+             */
 
             Log.w(LOG_TAG, "Search suggestions cursor at row " + rowNum +
                                     " returned exception.", e);
@@ -304,6 +316,56 @@ debug后发现在hasVoiceSearch()里：
 ```
 
 在这里并没有resolve到Activity，结果return false，mVoiceButtonEnabled也就变成false了。(┙>∧<)┙へ┻┻
+
+
+#### <div id="reflector">9. AutoCompleteTextViewReflector</div>
+
+v7包的SearchView使用了反射机制，通过反射拿到AutoCompleteTextView和InputMethodManager隐藏的方法。
+
+```java
+
+    static final AutoCompleteTextViewReflector HIDDEN_METHOD_INVOKER = new AutoCompleteTextViewReflector();
+
+    private static class AutoCompleteTextViewReflector {
+        private Method doBeforeTextChanged, doAfterTextChanged;
+        private Method ensureImeVisible;
+        private Method showSoftInputUnchecked;
+
+        AutoCompleteTextViewReflector() {
+            
+            /**
+             * 省略部分代码
+             */
+            
+            try {
+                showSoftInputUnchecked = InputMethodManager.class.getMethod(
+                        "showSoftInputUnchecked", int.class, ResultReceiver.class);
+                showSoftInputUnchecked.setAccessible(true);
+            } catch (NoSuchMethodException e) {
+                // Ah well.
+            }
+        }    
+    
+        /**
+         * 省略部分代码
+         */        
+    
+        void showSoftInputUnchecked(InputMethodManager imm, View view, int flags) {
+            if (showSoftInputUnchecked != null) {
+                try {
+                    showSoftInputUnchecked.invoke(imm, flags, null);
+                    return;
+                } catch (Exception e) {
+                }
+            }
+
+            //只有这个方法才有在if后面做处理
+            // Hidden method failed, call public version instead
+            imm.showSoftInput(view, flags);
+        }        
+    }
+
+```
 
 
 未完，待续。。。。
