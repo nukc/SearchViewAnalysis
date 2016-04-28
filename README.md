@@ -108,7 +108,7 @@ updateQueryHint();
 
 #### <div id="listener">4. Listener</div>
 
-然后，我们来看看`SearchView`里面有几个Listener：
+然后，我们来看看`SearchView`里面有哪些Listener：
 
 ```java
 
@@ -136,7 +136,7 @@ updateQueryHint();
     //还有其他mOnClickListener，mTextKeyListener等
 ```
 
-我们先来看看OnQueryTextListener是怎样进行监听的：
+我们看看OnQueryTextListener是怎样进行监听的：
 
 - onQueryTextChange(String newText)
 
