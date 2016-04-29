@@ -89,6 +89,9 @@ public class MainActivity extends AppCompatActivity {
         //mSearchView.setQuery("", true);
     }
 
+    /**
+     * 通过反射机制设置SearchView没有提供的方法
+     */
     private void setupByField() {
         try {
             Field field = mSearchView.getClass().getDeclaredField("mSearchSrcTextView");
@@ -105,6 +108,9 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * 通过findViewById设置SearchView没有提供的方法
+     */
     private void setupByFindView() {
         mSearchSrcTextView = (SearchView.SearchAutoComplete)
                 mSearchView.findViewById(android.support.v7.appcompat.R.id.search_src_text);
@@ -127,10 +133,12 @@ public class MainActivity extends AppCompatActivity {
                 (SearchManager) getSystemService(Context.SEARCH_SERVICE);
 
         MenuItem searchMenuItem = menu.findItem(R.id.search);
+        //使用v7的时候,需要使用MenuItemCompat
         SearchView searchView =
                 (SearchView) MenuItemCompat.getActionView(searchMenuItem);
 
-        ComponentName componentName = new ComponentName(this, SearchResultActivity.class);
+        //可以自己new ComponentName来指定Activity
+        //ComponentName componentName = new ComponentName(this, SearchResultActivity.class);
         searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
         return true;
     }
