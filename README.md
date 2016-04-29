@@ -317,6 +317,8 @@ debug后发现在hasVoiceSearch()里：
 
 在这里并没有resolve到Activity，结果return false，mVoiceButtonEnabled也就变成false了。(┙>∧<)┙へ┻┻
 
+终于知道为什么了，原来阉割版的系统都不会出现语音搜索按钮，华为/魅族/Genymotion试过都不行(没有试过全版本系统),
+AS自带模拟器可以(有Google服务),具体应该就是没有resolve到Google语音识别Activity。对语音识别有兴趣的同学可以搜索RecognizerIntent.
 
 #### <div id="reflector">9. AutoCompleteTextViewReflector</div>
 
