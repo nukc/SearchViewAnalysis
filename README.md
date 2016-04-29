@@ -81,8 +81,12 @@ v7版本：23.2.1
 构造方法最后是更新控件状态，`mIconifiedByDefault`默认是`true`的，`setIconifiedByDefault(boolean iconified)`改变值后也会执行如下方法：
 
 ```java
-updateViewsVisibility(mIconifiedByDefault);
-updateQueryHint();
+    public void setIconifiedByDefault(boolean iconified) {
+        if (mIconifiedByDefault == iconified) return;
+        mIconifiedByDefault = iconified;
+        updateViewsVisibility(iconified);
+        updateQueryHint();
+    }
 ```
 
 所以`setIconifiedByDefault(false)`会让SearchView一直呈现展开状态，并且输入框内icon也会不显示。具体方法如下，该方法在`updateQueryHint()`中被调用：
@@ -144,8 +148,25 @@ updateQueryHint();
     //在构造方法里添加了监听
     mSearchSrcTextView.addTextChangedListener(mTextWatcher);
 ```
-然后在`mTextWatcher`的`onTextChanged()`方法里调用`SearchView.this.onTextChanged(s);`，
-在`onTextChanged(CharSequence newText)`，当mOnQueryChangeListener!=null和当文本不一样的时候会触发。
+然后在`mTextWatcher`的`onTextChanged()`方法里调用了SearchView的`onTextChanged(CharSequence newText)`方法，
+也就是在这里进行了判断触发:
+
+```java
+
+    private void onTextChanged(CharSequence newText) {
+        /**
+         * 省略代码,主要是更新组件
+         */
+
+        //当listener!=null和当文本不一样的时候会触发。
+        if (mOnQueryChangeListener != null && !TextUtils.equals(newText, mOldQueryText)) {
+            mOnQueryChangeListener.onQueryTextChange(newText.toString());
+        }
+
+        //省略代码
+    }
+
+```
 
 - onQueryTextSubmit(String query)
 
@@ -288,7 +309,7 @@ W/SearchView: Search suggestions cursor at row 0 returned exception.
 onSuggestionClick(int position) 返回 true 就不会执行`createIntentFromSuggestion(~)`，
 也就不会log了，但这样，键盘的隐藏和可选项pop的dismiss也不会执行，需要自己处理，使用SearchView的`clearFocus()`方法就能达到同样的效果。
 
-那既然是报null，那就设置Searchable吧，设置后是会startActivity(执行完createIntentFromSuggestion(~)后就会执行)。
+那既然是报null，那就设置Searchable吧，设置后是会startActivity的(执行完createIntentFromSuggestion(~)后就会执行)。
 然后效果就是当你点击了可选项就会startActivity，看需求做选择吧。。
 
 #### <div id="voice">8. 语音搜索功能</div>
@@ -318,7 +339,7 @@ debug后发现在hasVoiceSearch()里：
 在这里并没有resolve到Activity，结果return false，mVoiceButtonEnabled也就变成false了。(┙>∧<)┙へ┻┻
 
 终于知道为什么了，原来阉割版的系统都不会出现语音搜索按钮，华为/魅族/Genymotion试过都不行(没有试过全版本系统),
-AS自带模拟器可以(有Google服务),具体应该就是没有resolve到Google语音识别Activity。对语音识别有兴趣的同学可以搜索RecognizerIntent.
+AS自带模拟器可以(有Google服务)，具体应该就是没有resolve到Google语音识别Activity。对语音识别有兴趣的同学可以搜索RecognizerIntent。
 
 #### <div id="reflector">9. AutoCompleteTextViewReflector</div>
 
