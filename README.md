@@ -84,6 +84,7 @@ v7版本：23.2.1
     public void setIconifiedByDefault(boolean iconified) {
         if (mIconifiedByDefault == iconified) return;
         mIconifiedByDefault = iconified;
+        //更新组件
         updateViewsVisibility(iconified);
         updateQueryHint();
     }
