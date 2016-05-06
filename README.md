@@ -447,7 +447,7 @@ v7包的SearchView使用了反射机制，通过反射拿到AutoCompleteTextView
 
 ## <div id="future">2. 展望未来</div>
 
-在v7包的SearchView里，有一个声明并初始化了的变量，但没有用到过:
+在v7包的SearchView里，有一个声明并初始化了的变量，但并没有用到过:
 
 ```java
     private final AppCompatDrawableManager mDrawableManager;
