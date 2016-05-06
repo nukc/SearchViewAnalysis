@@ -3,6 +3,8 @@
 SearchView是一个搜索框控件，样式也挺好看的。这次解析主要围绕`android.support.v7.widget`包下的SearchView（API >= 7）,`android.widget.SearchView`支持API >= 11，
 另外有个`android.support.v4.widget.SearchViewCompat`。
 
+<img src="https://raw.githubusercontent.com/nukc/SearchViewAnalysis/master/art/searchview.mov.gif">
+
 ## 目录
 
 - <a href="#analysis">源码解析</a>
@@ -394,14 +396,14 @@ v7包的SearchView使用了反射机制，通过反射拿到AutoCompleteTextView
 
 #### <div id="onmeasure">10. onMeasure 测量</div>
 
-查看了下`onMeasure`, 发现有个地方还是比较在意的. 当`isIconified()`返回`false`的时候, width的mode在最后都会被设置成MeasureSpec.EXACTLY.
-在SearchView伸展收缩的时候, `onMeasure`会被执行多次, width根据其mode改变, 之后mode设置为EXACTLY再调用父类super方法进行测量.
+查看了下`onMeasure`，发现有个地方还是比较在意的。 当`isIconified()`返回`false`的时候，width的mode在最后都会被设置成`MeasureSpec.EXACTLY`。
+在SearchView伸展收缩的时候，`onMeasure`会被执行多次，width根据其mode改变, 之后mode设置为EXACTLY再调用父类super方法进行测量。
 
-设置为EXACTLY, 这样父控件就能确切的决定view的大小, 那为什么只对width而不对height进行设置呢?
+设置为EXACTLY，这样父控件就能确切的决定view的大小，那为什么只对width而不对height进行设置呢?
 
-通过查看默认的[layout](https://github.com/nukc/SearchViewAnalysis/blob/master/app%2Fsrc%2Fmain%2Fres%2Flayout%2Flayout_search.xml),
-可以看到主要组件的layout_height的大多都是match_parent(对应EXACTLY模式), 而layout_width基本都是wrap_content(对应AT_MOST模式).
-另外, 不是只有伸展收缩的时候, `onMeasure`才会被执行, 点击语音搜索按钮/输入框获取焦点的时候/...也会执行.
+通过查看默认的 [layout](https://github.com/nukc/SearchViewAnalysis/blob/master/app%2Fsrc%2Fmain%2Fres%2Flayout%2Flayout_search.xml)，
+可以看到主要组件的layout_height的大多都是match_parent(对应EXACTLY模式)，而layout_width基本都是wrap_content(对应AT_MOST模式)。
+另外，不是只有伸展收缩的时候，`onMeasure`才会被执行, 点击语音搜索按钮/输入框获取焦点的时候/...也会执行。
 
 ```java
 
